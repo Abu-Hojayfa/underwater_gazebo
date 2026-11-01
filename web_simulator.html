@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoboSub Real-Time Web Simulator (Physics & Controllable AUV)</title>
+  <title>RoboSub Real-Time Web Simulator (Physics &amp; Controllable AUV)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -21,7 +21,6 @@
       top: 0;
       left: 0;
     }
-    /* Top Navigation Header */
     header {
       position: absolute;
       top: 0;
@@ -69,30 +68,13 @@
       transition: all 0.15s ease;
       backdrop-filter: blur(6px);
     }
-    button:hover {
-      background: #0284c7;
-      color: #ffffff;
-      border-color: #38bdf8;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-    }
-    button.active {
-      background: #0284c7;
-      color: #ffffff;
-      border-color: #38bdf8;
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
-    }
-    button.danger {
-      border-color: #dc2626;
-      color: #fca5a5;
-    }
-    button.danger:hover {
-      background: #dc2626;
-      color: #ffffff;
-    }
-    /* Real-Time Telemetry HUD Overlay */
+    button:hover { background: #0284c7; color: #ffffff; border-color: #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,0.4); }
+    button.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.5); }
+    button.danger { border-color: #dc2626; color: #fca5a5; }
+    button.danger:hover { background: #dc2626; color: #ffffff; }
     .hud-panel {
       position: absolute;
-      background: rgba(4, 18, 30, 0.85);
+      background: rgba(4, 18, 30, 0.88);
       border: 1px solid #164060;
       border-radius: 8px;
       padding: 12px 16px;
@@ -102,21 +84,10 @@
       pointer-events: none;
       z-index: 10;
     }
-    #telemetry-hud {
-      top: 65px;
-      left: 20px;
-      width: 250px;
-    }
-    #controls-hud {
-      bottom: 20px;
-      left: 20px;
-      max-width: 380px;
-    }
-    #tactical-hud {
-      top: 65px;
-      right: 20px;
-      width: 240px;
-    }
+    #telemetry-hud { top: 65px; left: 20px; width: 250px; }
+    #controls-hud  { bottom: 20px; left: 20px; max-width: 400px; }
+    #tactical-hud  { top: 65px; right: 20px; width: 260px; }
+    #mission-hud   { top: 65px; right: 300px; width: 230px; }
     .hud-title {
       font-weight: 700;
       color: #38bdf8;
@@ -129,15 +100,9 @@
       display: flex;
       justify-content: space-between;
     }
-    .hud-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 4px 0;
-      font-size: 12px;
-    }
+    .hud-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 12px; }
     .hud-label { color: #7dd3fc; }
     .hud-val { font-family: monospace; font-weight: bold; color: #f0f9ff; }
-    /* Keycap styling */
     .key {
       display: inline-block;
       background: #1e3a5f;
@@ -149,7 +114,6 @@
       font-family: monospace;
       font-weight: bold;
     }
-    /* Collision Alert Indicator */
     #collision-alert {
       position: absolute;
       top: 70px;
@@ -164,14 +128,30 @@
       letter-spacing: 1px;
       display: none;
       z-index: 30;
-      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
-      animation: pulse 0.5s infinite alternate;
+      box-shadow: 0 0 20px rgba(239,68,68,0.8);
+      animation: pulseFx 0.5s infinite alternate;
     }
-    @keyframes pulse {
-      from { transform: translateX(-50%) scale(0.96); opacity: 0.85; }
-      to { transform: translateX(-50%) scale(1.04); opacity: 1.0; }
+    #task-complete-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(22, 163, 74, 0.92);
+      color: #ffffff;
+      padding: 14px 40px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 2px;
+      display: none;
+      z-index: 40;
+      box-shadow: 0 0 40px rgba(34,197,94,0.7);
+      text-align: center;
     }
-    /* Mobile / On-Screen Pilot Pad */
+    @keyframes pulseFx {
+      from { opacity: 0.85; }
+      to   { opacity: 1.0; }
+    }
     #pilot-touchpad {
       position: absolute;
       bottom: 20px;
@@ -196,6 +176,10 @@
       justify-content: center;
       font-size: 14px;
     }
+    .task-item { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+    .task-done { color: #4ade80; }
+    .task-pending { color: #94a3b8; }
+    .task-active { color: #fbbf24; font-weight: bold; }
   </style>
 
   <!-- Local Offline Libraries with CDN Fallback -->
@@ -203,7 +187,6 @@
   <script src="assets/js/cannon.min.js"></script>
   <script src="assets/js/OrbitControls.js"></script>
   <script>
-    // CDN Fallbacks if local files are missing
     if (typeof THREE === 'undefined') {
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
       document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
@@ -222,16 +205,17 @@
       <span class="badge">Cannon.js Physics</span>
     </h1>
     <div class="header-controls">
-      <button id="cam-follow" class="active" onclick="setCameraMode('follow')">Follow Cam [1]</button>
-      <button id="cam-orbit" onclick="setCameraMode('orbit')">Free Orbit [2]</button>
-      <button id="cam-cockpit" onclick="setCameraMode('cockpit')">AUV Bow Cam [3]</button>
-      <button id="cam-overhead" onclick="setCameraMode('overhead')">Tactical Map [4]</button>
-      <button id="btn-autopilot" onclick="toggleAutopilot()">Autopilot: OFF</button>
-      <button class="danger" onclick="resetAUV()">Reset Pose [R]</button>
+      <button id="cam-follow"   class="active"  onclick="setCameraMode('follow')">Follow Cam [1]</button>
+      <button id="cam-orbit"                    onclick="setCameraMode('orbit')">Free Orbit [2]</button>
+      <button id="cam-cockpit"                  onclick="setCameraMode('cockpit')">AUV Bow Cam [3]</button>
+      <button id="cam-overhead"                 onclick="setCameraMode('overhead')">Tactical Map [4]</button>
+      <button id="btn-autopilot"                onclick="toggleAutopilot()">Autopilot: OFF</button>
+      <button class="danger"                    onclick="resetAUV()">Reset Pose [R]</button>
     </div>
   </header>
 
   <div id="collision-alert">⚠️ OBSTACLE COLLISION DETECTED</div>
+  <div id="task-complete-banner"></div>
 
   <!-- Telemetry HUD -->
   <div class="hud-panel" id="telemetry-hud">
@@ -239,29 +223,52 @@
     <div class="hud-row"><span class="hud-label">Position X:</span><span class="hud-val" id="val-x">1.00 m</span></div>
     <div class="hud-row"><span class="hud-label">Position Y:</span><span class="hud-val" id="val-y">0.00 m</span></div>
     <div class="hud-row"><span class="hud-label">Depth (Z):</span><span class="hud-val" id="val-z">2.50 m</span></div>
-    <div class="hud-row"><span class="hud-label">Surge Velocity:</span><span class="hud-val" id="val-speed">0.00 m/s</span></div>
+    <div class="hud-row"><span class="hud-label">Surge Speed:</span><span class="hud-val" id="val-speed">0.00 m/s</span></div>
     <div class="hud-row"><span class="hud-label">Yaw Heading:</span><span class="hud-val" id="val-yaw">0.0°</span></div>
-    <div class="hud-row"><span class="hud-label">Buoyancy State:</span><span class="hud-val" id="val-buoyancy" style="color: #4ade80;">Neutral (1.00g)</span></div>
+    <div class="hud-row"><span class="hud-label">Buoyancy:</span><span class="hud-val" id="val-buoyancy" style="color:#4ade80;">Neutral</span></div>
   </div>
 
-  <!-- Tactical Navigation Station HUD -->
+  <!-- Tactical Navigation HUD -->
   <div class="hud-panel" id="tactical-hud">
     <div class="hud-title">Navigation Radar</div>
     <div class="hud-row"><span class="hud-label">Current Zone:</span><span class="hud-val" id="val-zone" style="color:#f59e0b;">Starting Gate</span></div>
-    <div class="hud-row"><span class="hud-label">Next Target:</span><span class="hud-val" id="val-next">Gate Corridor (X=3.5m)</span></div>
-    <div class="hud-row"><span class="hud-label">Distance to Target:</span><span class="hud-val" id="val-dist">2.50 m</span></div>
-    <div class="hud-row"><span class="hud-label">Pool Freeboard:</span><span class="hud-val">0.50 m (Water @ 4m)</span></div>
+    <div class="hud-row"><span class="hud-label">Next Target:</span><span class="hud-val" id="val-next">Gate Corridor</span></div>
+    <div class="hud-row"><span class="hud-label">Distance:</span><span class="hud-val" id="val-dist">2.50 m</span></div>
+    <div class="hud-row"><span class="hud-label">Pool Depth:</span><span class="hud-val">4.0 m (ENU +Z up)</span></div>
   </div>
 
-  <!-- Control Keys Info HUD -->
+  <!-- Mission Status HUD -->
+  <div class="hud-panel" id="mission-hud">
+    <div class="hud-title">Mission Tasks <span id="mission-score">0/6</span></div>
+    <div class="task-item"><span id="t1-label" class="task-pending">T1 Starting Gate</span><span id="t1-status">○</span></div>
+    <div class="task-item"><span id="t2-label" class="task-pending">T2 Slalom Avoid</span><span id="t2-status">○</span></div>
+    <div class="task-item"><span id="t3-label" class="task-pending">T3 Buoy Recon</span><span id="t3-status">○</span></div>
+    <div class="task-item"><span id="t4-label" class="task-pending">T4 Recon Bins</span><span id="t4-status">○</span></div>
+    <div class="task-item"><span id="t5-label" class="task-pending">T5 Torpedo Board</span><span id="t5-status">○</span></div>
+    <div class="task-item"><span id="t6-label" class="task-pending">T6 Octagon Surface</span><span id="t6-status">○</span></div>
+  </div>
+
+  <!-- Control Keys HUD -->
   <div class="hud-panel" id="controls-hud">
     <div class="hud-title">AUV Thruster Controls</div>
-    <div class="hud-row"><span><span class="key">W</span> / <span class="key">S</span> Surge Forward / Reverse</span><span><span class="key">A</span> / <span class="key">D</span> Turn Yaw Left / Right</span></div>
-    <div class="hud-row"><span><span class="key">Q</span> / <span class="key">E</span> Sway Strafe Left / Right</span><span><span class="key">Space</span> / <span class="key">Shift</span> Dive Down / Surface Up</span></div>
-    <div class="hud-row"><span><span class="key">1-4</span> Switch Camera Views</span><span><span class="key">R</span> Reset Vehicle</span></div>
+    <div class="hud-row">
+      <span><span class="key">W</span>/<span class="key">S</span> Surge Fwd/Rev</span>
+      <span><span class="key">A</span>/<span class="key">D</span> Yaw Left/Right</span>
+    </div>
+    <div class="hud-row">
+      <span><span class="key">Q</span>/<span class="key">E</span> Sway Port/Stbd</span>
+      <span><span class="key">Space</span>/<span class="key">Shift</span> Dive/Surface</span>
+    </div>
+    <div class="hud-row">
+      <span><span class="key">1-4</span> Camera Modes</span>
+      <span><span class="key">R</span> Reset Vehicle</span>
+    </div>
+    <div class="hud-row" style="margin-top:6px;font-size:11px;color:#64748b;">
+      Autopilot uses PD heading + speed limiter. All 6 RoboSub tasks covered.
+    </div>
   </div>
 
-  <!-- On-Screen Direct Touchpad (For Mobile or Mouse-Only Pilots) -->
+  <!-- On-Screen Touchpad -->
   <div id="pilot-touchpad">
     <div class="touch-row">
       <button class="touch-btn" onmousedown="keys['KeyQ']=true" onmouseup="keys['KeyQ']=false">↶</button>
@@ -278,21 +285,54 @@
   </div>
 
   <script>
-    // Set Three.js to ENU Coordinate Standard: +Z is Up, +X is Forward, +Y is Lateral
+    // ENU coordinate standard: +X forward, +Y lateral (port), +Z up
     THREE.Object3D.DefaultUp.set(0, 0, 1);
 
-    // Global App State
+    // ─── App State ─────────────────────────────────────────────────────────────
     let scene, camera, renderer, orbitControls;
-    let world; // Cannon.js physics world
+    let world;
     let auvBody, auvMesh;
-    let cameraMode = 'follow'; // 'follow', 'orbit', 'cockpit', 'overhead'
-    let autopilot = false;
-
-    // Keyboard state
+    let pingerRings = []; // for animated pinger circles
+    let cameraMode = 'follow';
+    let autopilot  = false;
     const keys = {};
+
+    // Mission completion tracking
+    const taskDone = [false, false, false, false, false, false]; // T1..T6
+    let missionScore = 0;
+
+    // ─── Autopilot Waypoints ────────────────────────────────────────────────────
+    // Each waypoint is a {name, task, x, y, z, radius} object.
+    // Slalom waypoints use corridor midpoints between poles (not pole positions).
+    // task index: 0-based, matches taskDone[].
+    const waypoints = [
+      // T1 – Starting Gate: thread through port corridor
+      { name:"Gate Port Corridor", task:0,  x:3.5,  y:-0.78, z:2.5,  radius:1.8 },
+      // T2 – Slalom: 5 corridor midpoints threading between the 6 poles
+      //   Poles at Y offsets: -1.0, 0.0, +1.0, -1.0, 0.0, +1.0
+      //   AUV snakes: left-of-1→right-of-2→left-of-3→right-of-4→left-of-5→right-of-6
+      { name:"Slalom Entry",        task:1,  x:5.8,  y:0.0,   z:2.0,  radius:1.5 },
+      { name:"Slalom Corridor 1",   task:1,  x:6.9,  y: 0.45, z:2.0,  radius:1.2 },
+      { name:"Slalom Corridor 2",   task:1,  x:7.9,  y:-0.45, z:2.0,  radius:1.2 },
+      { name:"Slalom Corridor 3",   task:1,  x:8.9,  y: 0.45, z:2.0,  radius:1.2 },
+      { name:"Slalom Corridor 4",   task:1,  x:9.9,  y:-0.45, z:2.0,  radius:1.2 },
+      { name:"Slalom Corridor 5",   task:1,  x:11.0, y: 0.45, z:2.0,  radius:1.2 },
+      { name:"Slalom Exit",         task:1,  x:12.2, y:0.0,   z:2.0,  radius:1.5 },
+      // T3 – Buoy Recon
+      { name:"Buoy Recon Array",    task:2,  x:12.8, y:-1.2,  z:2.0,  radius:2.0 },
+      // T4 – Recon Bins
+      { name:"Recon Target Bins",   task:3,  x:14.0, y:-2.0,  z:1.5,  radius:2.0 },
+      // T5 – Torpedo Board
+      { name:"Torpedo Board",       task:4,  x:14.2, y:2.0,   z:1.8,  radius:2.0 },
+      // T6 – Octagon surfacing
+      { name:"Octagon Approach",    task:5,  x:16.5, y:0.0,   z:2.0,  radius:2.0 },
+      { name:"Octagon Surface",     task:5,  x:17.5, y:0.0,   z:3.8,  radius:1.5 },
+    ];
+    let currentWpIdx = 0;
+
     window.addEventListener('keydown', e => {
       keys[e.code] = true;
-      if (e.code === 'KeyR') resetAUV();
+      if (e.code === 'KeyR')    resetAUV();
       if (e.code === 'Digit1') setCameraMode('follow');
       if (e.code === 'Digit2') setCameraMode('orbit');
       if (e.code === 'Digit3') setCameraMode('cockpit');
@@ -300,139 +340,90 @@
     });
     window.addEventListener('keyup', e => { keys[e.code] = false; });
 
-    // Mission Stations for Radar & Autopilot
-    const stations = [
-      { name: "Starting Gate", x: 3.5, y: -0.7, z: 2.5, desc: "Port Gate Corridor" },
-      { name: "Slalom Pole 1", x: 6.5, y: -1.0, z: 2.0, desc: "Avoid Debris (White)" },
-      { name: "Slalom Pole 2", x: 7.5, y: 0.0, z: 2.0, desc: "Avoid Debris (Red)" },
-      { name: "Slalom Pole 3", x: 8.5, y: 1.0, z: 2.0, desc: "Avoid Debris (White)" },
-      { name: "Slalom Pole 4", x: 9.5, y: -1.0, z: 2.0, desc: "Avoid Debris (White)" },
-      { name: "Slalom Pole 5", x: 10.5, y: 0.0, z: 2.0, desc: "Avoid Debris (Red)" },
-      { name: "Slalom Pole 6", x: 11.5, y: 1.0, z: 2.0, desc: "Avoid Debris (White)" },
-      { name: "Buoy Target Array", x: 12.8, y: -0.9, z: 2.0, desc: "Color Recognition Buoys" },
-      { name: "Recon Bins", x: 14.0, y: -2.0, z: 1.2, desc: "Marker Drop Target Bins" },
-      { name: "Torpedo Target Board", x: 14.2, y: 2.0, z: 1.5, desc: "Torpedo Apertures" },
-      { name: "9ft Octagon Zone", x: 17.5, y: 0.0, z: 1.0, desc: "Acoustic Pinger & Table" },
-      { name: "Surfacing Goal", x: 17.5, y: 0.0, z: 3.8, desc: "Mission Surfacing Complete" }
-    ];
-    let currentStationIdx = 0;
-
-    // Initialize Physics (Cannon.js)
+    // ─── Physics Initialization ─────────────────────────────────────────────────
     function initPhysics() {
       world = new CANNON.World();
-      world.gravity.set(0, 0, -9.81); // Standard gravity
+      world.gravity.set(0, 0, -9.81);
       world.broadphase = new CANNON.NaiveBroadphase();
-      world.solver.iterations = 10;
-      world.defaultContactMaterial.friction = 0.3;
+      world.solver.iterations = 12;
+      world.defaultContactMaterial.friction    = 0.3;
       world.defaultContactMaterial.restitution = 0.15;
 
-      // 1. Static Pool Boundaries in Physics
-      // Floor (20m x 10m x 0.3m slab, centered at X=10, Y=0, Z=-0.15)
-      const floorShape = new CANNON.Box(new CANNON.Vec3(10, 5, 0.15));
-      const floorBody = new CANNON.Body({ mass: 0 });
-      floorBody.addShape(floorShape);
-      floorBody.position.set(10, 0, -0.15);
-      world.addBody(floorBody);
+      // Pool floor
+      addStaticBox(10, 0, -0.15, 20, 10, 0.30);
+      // Walls
+      addStaticBox(-0.15, 0, 2.25, 0.30, 10.6, 4.5);
+      addStaticBox(20.15, 0, 2.25, 0.30, 10.6, 4.5);
+      addStaticBox(10, -5.15, 2.25, 20, 0.30, 4.5);
+      addStaticBox(10,  5.15, 2.25, 20, 0.30, 4.5);
 
-      // West Wall (Start, X = -0.15)
-      const wallWShape = new CANNON.Box(new CANNON.Vec3(0.15, 5.3, 2.25));
-      const wallW = new CANNON.Body({ mass: 0 });
-      wallW.addShape(wallWShape);
-      wallW.position.set(-0.15, 0, 2.25);
-      world.addBody(wallW);
-
-      // East Wall (End, X = 20.15)
-      const wallEShape = new CANNON.Box(new CANNON.Vec3(0.15, 5.3, 2.25));
-      const wallE = new CANNON.Body({ mass: 0 });
-      wallE.addShape(wallEShape);
-      wallE.position.set(20.15, 0, 2.25);
-      world.addBody(wallE);
-
-      // South Wall (Port, Y = -5.15)
-      const wallSShape = new CANNON.Box(new CANNON.Vec3(10, 0.15, 2.25));
-      const wallS = new CANNON.Body({ mass: 0 });
-      wallS.addShape(wallSShape);
-      wallS.position.set(10, -5.15, 2.25);
-      world.addBody(wallS);
-
-      // North Wall (Starboard, Y = 5.15)
-      const wallNShape = new CANNON.Box(new CANNON.Vec3(10, 0.15, 2.25));
-      const wallN = new CANNON.Body({ mass: 0 });
-      wallN.addShape(wallNShape);
-      wallN.position.set(10, 5.15, 2.25);
-      world.addBody(wallN);
-
-      // 2. Starting Gate Physics Obstacles
-      // Vertical Posts & Divider (Leave dual passages open)
+      // Gate uprights + center divider + crossbars
       addStaticCylinder(3.5, -1.525, 2.5, 0.04, 1.52);
-      addStaticCylinder(3.5, 1.525, 2.5, 0.04, 1.52);
-      addStaticCylinder(3.5, 0.0, 2.5, 0.04, 1.52); // center divider
-      addStaticBox(3.5, 0, 3.26, 0.08, 3.05, 0.08); // top crossbar
-      addStaticBox(3.5, 0, 1.74, 0.08, 3.05, 0.08); // bot crossbar
+      addStaticCylinder(3.5,  1.525, 2.5, 0.04, 1.52);
+      addStaticCylinder(3.5,  0.0,   2.5, 0.04, 1.52);
+      addStaticBox(3.5, 0, 3.26, 0.08, 3.05, 0.08);
+      addStaticBox(3.5, 0, 1.74, 0.08, 3.05, 0.08);
 
-      // 3. Slalom Poles (6 vertical cylinders)
-      const poles = [
-        [6.5, -1.0], [7.5, 0.0], [8.5, 1.0],
-        [9.5, -1.0], [10.5, 0.0], [11.5, 1.0]
-      ];
-      poles.forEach(([x, y]) => {
+      // Pre-qualification vertical marker pole (full depth, X=13.5)
+      addStaticCylinder(13.5, 0.0, 2.0, 0.04, 4.0);
+
+      // Slalom poles (6 × vertical cylinder, Y-axis in physics rotated to Z)
+      [[6.5,-1.0],[7.5,0.0],[8.5,1.0],[9.5,-1.0],[10.5,0.0],[11.5,1.0]].forEach(([x,y]) => {
         addStaticCylinder(x, y, 1.1, 0.05, 2.2);
-        addStaticCylinder(x, y, 0.05, 0.20, 0.10); // base
+        addStaticCylinder(x, y, 0.05, 0.20, 0.10);
       });
 
-      // 4. Bins & Torpedo Board Physics
+      // Bins + torpedo board
       addStaticBox(14.0, -2.0, 0.15, 1.2, 0.8, 0.3);
-      addStaticBox(14.2, 2.0, 1.5, 0.08, 1.2, 1.0);
+      addStaticBox(14.2,  2.0, 1.5,  0.08, 1.2, 1.0);
 
-      // 5. Dynamic AUV Vehicle Body
-      const auvShape = new CANNON.Box(new CANNON.Vec3(0.40, 0.20, 0.14)); // 0.8m x 0.4m x 0.28m
-      auvBody = new CANNON.Body({
-        mass: 25.0, // 25kg
-        linearDamping: 0.45,  // Hydrodynamic resistance damping
-        angularDamping: 0.65  // Angular damping
-      });
+      // AUV dynamic body
+      const auvShape = new CANNON.Box(new CANNON.Vec3(0.40, 0.20, 0.14));
+      auvBody = new CANNON.Body({ mass: 25.0, linearDamping: 0.45, angularDamping: 0.65 });
       auvBody.addShape(auvShape);
-      auvBody.position.set(1.0, 0.0, 2.5); // AUV start pose
-      auvBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), 0);
+      auvBody.position.set(1.0, 0.0, 2.5);
+      auvBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), 0);
 
-      // Collision listener
-      let collisionCooldown = 0;
-      auvBody.addEventListener("collide", e => {
+      let colCooldown = 0;
+      auvBody.addEventListener('collide', () => {
         const now = Date.now();
-        if (now - collisionCooldown > 300) {
-          collisionCooldown = now;
-          const alert = document.getElementById("collision-alert");
-          alert.style.display = "block";
-          setTimeout(() => { alert.style.display = "none"; }, 800);
+        if (now - colCooldown > 300) {
+          colCooldown = now;
+          const el = document.getElementById('collision-alert');
+          el.style.display = 'block';
+          setTimeout(() => { el.style.display = 'none'; }, 800);
         }
       });
-
       world.addBody(auvBody);
     }
 
+    // addStaticBox: half-extents computed internally from full size
     function addStaticBox(x, y, z, sx, sy, sz) {
-      const shape = new CANNON.Box(new CANNON.Vec3(sx / 2, sy / 2, sz / 2));
-      const body = new CANNON.Body({ mass: 0 });
+      const shape = new CANNON.Box(new CANNON.Vec3(sx/2, sy/2, sz/2));
+      const body  = new CANNON.Body({ mass: 0 });
       body.addShape(shape);
       body.position.set(x, y, z);
       world.addBody(body);
     }
 
+    // addStaticCylinder: CANNON.Cylinder defaults to Y-axis.
+    // We rotate the shape 90° around X so the cylinder axis aligns with +Z (vertical).
     function addStaticCylinder(x, y, z, radius, height) {
-      // Approximate cylinder with box or cylinder
       const shape = new CANNON.Cylinder(radius, radius, height, 8);
-      const body = new CANNON.Body({ mass: 0 });
-      body.addShape(shape);
+      const body  = new CANNON.Body({ mass: 0 });
+      const q     = new CANNON.Quaternion();
+      q.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
+      body.addShape(shape, new CANNON.Vec3(), q);
       body.position.set(x, y, z);
       world.addBody(body);
     }
 
-    // Initialize 3D Graphics (Three.js)
+    // ─── Graphics Initialization ────────────────────────────────────────────────
     function initGraphics() {
       const container = document.getElementById('canvas-container');
-      scene = new THREE.Scene();
+      scene  = new THREE.Scene();
       scene.background = new THREE.Color(0x061826);
-      scene.fog = new THREE.FogExp2(0x0a2233, 0.035); // Realistic underwater light scatter
+      scene.fog = new THREE.FogExp2(0x0a2233, 0.032);
 
       camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 150);
       camera.position.set(-3, 0, 3.8);
@@ -450,199 +441,183 @@
       orbitControls.target.set(10, 0, 2.0);
       orbitControls.enabled = false;
 
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0x286080, 1.2);
-      scene.add(ambientLight);
-
-      const sunLight = new THREE.DirectionalLight(0xd0f0ff, 1.8);
-      sunLight.position.set(10, 0, 12);
-      sunLight.castShadow = true;
-      sunLight.shadow.mapSize.width = 2048;
-      sunLight.shadow.mapSize.height = 2048;
-      sunLight.shadow.camera.near = 0.5;
-      sunLight.shadow.camera.far = 25;
-      sunLight.shadow.camera.left = -12;
-      sunLight.shadow.camera.right = 12;
-      sunLight.shadow.camera.top = 12;
-      sunLight.shadow.camera.bottom = -12;
-      scene.add(sunLight);
+      // Lighting
+      scene.add(new THREE.AmbientLight(0x286080, 1.2));
+      const sun = new THREE.DirectionalLight(0xd0f0ff, 1.8);
+      sun.position.set(10, 0, 12);
+      sun.castShadow = true;
+      sun.shadow.mapSize.width  = 2048;
+      sun.shadow.mapSize.height = 2048;
+      sun.shadow.camera.near = 0.5; sun.shadow.camera.far  = 25;
+      sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
+      sun.shadow.camera.top  =  12; sun.shadow.camera.bottom = -12;
+      scene.add(sun);
 
       buildPoolVisuals();
       buildCompetitionElements();
       buildAUVMesh();
+      buildPingerAnimation();
 
-      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
     }
 
-    // Build Detailed Pool Visuals
+    // ─── Pool Visuals ───────────────────────────────────────────────────────────
     function buildPoolVisuals() {
-      // 1. Floor Tile (20m x 10m)
-      const floorGeo = new THREE.BoxGeometry(20, 10, 0.3);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x143c4f,
-        roughness: 0.8,
-        metalness: 0.1
-      });
-      const floorMesh = new THREE.Mesh(floorGeo, floorMat);
-      floorMesh.position.set(10, 0, -0.15);
-      floorMesh.receiveShadow = true;
-      scene.add(floorMesh);
+      // Floor tile
+      const floor = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 10, 0.3),
+        new THREE.MeshStandardMaterial({ color: 0x143c4f, roughness: 0.8, metalness: 0.1 })
+      );
+      floor.position.set(10, 0, -0.15);
+      floor.receiveShadow = true;
+      scene.add(floor);
 
-      // Centerline Navigation Tile
-      const lineGeo = new THREE.PlaneGeometry(20, 0.2);
-      const lineMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide });
-      const lineMesh = new THREE.Mesh(lineGeo, lineMat);
-      lineMesh.position.set(10, 0, 0.005);
-      scene.add(lineMesh);
+      // Centerline stripe
+      const line = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+      );
+      line.position.set(10, 0, 0.005);
+      scene.add(line);
 
-      // Grid Lines on Pool Floor
+      // Grid
       const grid = new THREE.GridHelper(20, 10, 0x0284c7, 0x1b4963);
       grid.rotation.x = Math.PI / 2;
       grid.position.set(10, 0, 0.002);
       scene.add(grid);
 
-      // 2. Translucent Pool Walls
+      // Walls (translucent)
       const wallMat = new THREE.MeshPhysicalMaterial({
-        color: 0x0284c7,
-        transparent: true,
-        opacity: 0.35,
-        roughness: 0.2,
-        transmission: 0.6,
-        thickness: 0.5
+        color: 0x0284c7, transparent: true, opacity: 0.35,
+        roughness: 0.2, transmission: 0.6, thickness: 0.5
+      });
+      [
+        [[ -0.15,    0, 2.25], [0.3, 10.6, 4.5]],
+        [[ 20.15,    0, 2.25], [0.3, 10.6, 4.5]],
+        [[  10, -5.15, 2.25], [20,   0.3, 4.5]],
+        [[  10,  5.15, 2.25], [20,   0.3, 4.5]],
+      ].forEach(([pos, sz]) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(...sz), wallMat);
+        m.position.set(...pos);
+        scene.add(m);
       });
 
-      // West (Start) Wall
-      const wallW = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10.6, 4.5), wallMat);
-      wallW.position.set(-0.15, 0, 2.25);
-      scene.add(wallW);
-
-      // East (End) Wall
-      const wallE = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10.6, 4.5), wallMat);
-      wallE.position.set(20.15, 0, 2.25);
-      scene.add(wallE);
-
-      // South (Port) Wall
-      const wallS = new THREE.Mesh(new THREE.BoxGeometry(20, 0.3, 4.5), wallMat);
-      wallS.position.set(10, -5.15, 2.25);
-      scene.add(wallS);
-
-      // North (Starboard) Wall
-      const wallN = new THREE.Mesh(new THREE.BoxGeometry(20, 0.3, 4.5), wallMat);
-      wallN.position.set(10, 5.15, 2.25);
-      scene.add(wallN);
-
-      // 3. Water Surface (Z = 4.0m)
-      const waterGeo = new THREE.PlaneGeometry(20, 10, 32, 16);
-      const waterMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        transparent: true,
-        opacity: 0.3,
-        roughness: 0.1,
-        metalness: 0.4,
-        side: THREE.DoubleSide
-      });
-      const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-      waterMesh.position.set(10, 0, 4.0);
-      scene.add(waterMesh);
+      // Water surface
+      const water = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 10, 32, 16),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.28, roughness: 0.1, metalness: 0.4, side: THREE.DoubleSide })
+      );
+      water.position.set(10, 0, 4.0);
+      scene.add(water);
     }
 
-    // Build Competition Models matching exact RoboSub specs
+    // ─── Competition Elements ───────────────────────────────────────────────────
     function buildCompetitionElements() {
-      const pvcMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
-      const redMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
-      const blackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+      const pvcMat    = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
+      const redMat    = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+      const blackMat  = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
       const orangeMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.4 });
 
-      // 1. Task 1: Starting Gate (X = 3.5, 3.05m x 1.52m)
+      // ── T1: Starting Gate ──────────────────────────────────────────────────
       const gw = 3.05, gh = 1.52;
-      // Top & Bot Crossbars
-      const barTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, gw), pvcMat);
-      barTop.rotation.z = Math.PI / 2;
-      barTop.position.set(3.5, 0, 2.5 + gh / 2);
+      // Top crossbar (CylinderGeometry: axis=Y by default; rotate Z 90° → horizontal along Y)
+      const barTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, gw, 16), pvcMat);
+      barTop.rotation.x = Math.PI / 2;   // cylinder was Y-axis; rotate to lie along Y world axis
+      // Actually gate width is along Y: cylinder axis should be Y. Since DefaultUp=Z, CylinderGeometry axis
+      // is Y, which is already lateral. No extra rotation needed for the horizontal bar.
+      // Reset and use the correct approach: rotation.x = 0, cylinder Y axis = lateral axis in ENU.
+      barTop.rotation.set(0, 0, 0);
+      barTop.position.set(3.5, 0, 2.5 + gh/2);
       barTop.castShadow = true;
       scene.add(barTop);
 
       const barBot = barTop.clone();
-      barBot.position.set(3.5, 0, 2.5 - gh / 2);
+      barBot.position.set(3.5, 0, 2.5 - gh/2);
       scene.add(barBot);
 
-      // Left & Right uprights
-      const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, gh), pvcMat);
-      postL.position.set(3.5, -gw / 2, 2.5);
+      // Vertical uprights (CylinderGeometry Y-axis is world-Y when DefaultUp=Z → uprights lean sideways)
+      // To make them vertical (along +Z), rotate 90° around X.
+      const postGeo = new THREE.CylinderGeometry(0.03, 0.03, gh, 16);
+      const postL = new THREE.Mesh(postGeo, pvcMat);
+      postL.rotation.x = Math.PI / 2;
+      postL.position.set(3.5, -gw/2, 2.5);
       postL.castShadow = true;
       scene.add(postL);
 
       const postR = postL.clone();
-      postR.position.set(3.5, gw / 2, 2.5);
+      postR.position.set(3.5, gw/2, 2.5);
       scene.add(postR);
 
-      // Center Divider (Red)
-      const divider = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, gh), redMat);
-      divider.position.set(3.5, 0, 2.5);
-      scene.add(divider);
+      // Center divider (red, vertical)
+      const div = new THREE.Mesh(postGeo, redMat);
+      div.rotation.x = Math.PI / 2;
+      div.position.set(3.5, 0, 2.5);
+      scene.add(div);
 
-      // Indicator Boxes
-      // Port (-Y): Top Black, Bottom Red
-      const pTopL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh / 2), blackMat);
-      pTopL.position.set(3.5, -gw / 2, 2.5 + gh / 4);
-      scene.add(pTopL);
-      const pBotL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh / 2), redMat);
-      pBotL.position.set(3.5, -gw / 2, 2.5 - gh / 4);
-      scene.add(pBotL);
+      // Indicator boxes: Port (-Y): top=black bottom=red; Stbd (+Y): top=red bottom=black
+      [[- gw/2, blackMat, redMat],[gw/2, redMat, blackMat]].forEach(([yOff, topM, botM]) => {
+        const top = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh/2), topM);
+        top.position.set(3.5, yOff, 2.5 + gh/4);
+        scene.add(top);
+        const bot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh/2), botM);
+        bot.position.set(3.5, yOff, 2.5 - gh/4);
+        scene.add(bot);
+      });
 
-      // Starboard (+Y): Top Red, Bottom Black ("Red, Right, Above")
-      const pTopR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh / 2), redMat);
-      pTopR.position.set(3.5, gw / 2, 2.5 + gh / 4);
-      scene.add(pTopR);
-      const pBotR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, gh / 2), blackMat);
-      pBotR.position.set(3.5, gw / 2, 2.5 - gh / 4);
-      scene.add(pBotR);
-
-      // 2. Task 2: Slalom Obstacle Poles (6 alternating Red and White)
-      const poles = [
-        { x: 6.5, y: -1.0, col: 0xffffff },
-        { x: 7.5, y: 0.0, col: 0xef4444 },
-        { x: 8.5, y: 1.0, col: 0xffffff },
-        { x: 9.5, y: -1.0, col: 0xffffff },
-        { x: 10.5, y: 0.0, col: 0xef4444 },
-        { x: 11.5, y: 1.0, col: 0xffffff }
+      // ── T2: Slalom Poles ───────────────────────────────────────────────────
+      const poleData = [
+        { x:6.5,  y:-1.0, col: 0xffffff },
+        { x:7.5,  y: 0.0, col: 0xef4444 },
+        { x:8.5,  y: 1.0, col: 0xffffff },
+        { x:9.5,  y:-1.0, col: 0xffffff },
+        { x:10.5, y: 0.0, col: 0xef4444 },
+        { x:11.5, y: 1.0, col: 0xffffff },
       ];
-      poles.forEach(p => {
-        const mat = new THREE.MeshStandardMaterial({ color: p.col, roughness: 0.3 });
+      poleData.forEach(p => {
+        const mat  = new THREE.MeshStandardMaterial({ color: p.col, roughness: 0.3 });
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.2, 16), mat);
+        pole.rotation.x = Math.PI / 2;  // make vertical
         pole.position.set(p.x, p.y, 1.1);
         pole.castShadow = true;
         scene.add(pole);
 
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16), blackMat);
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.10, 16), blackMat);
+        base.rotation.x = Math.PI / 2;
         base.position.set(p.x, p.y, 0.05);
         scene.add(base);
 
         const cap = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), redMat);
-        cap.position.set(p.x, p.y, 2.23);
+        cap.position.set(p.x, p.y, 2.25);
         scene.add(cap);
       });
 
-      // 3. Task 3: Buoys (Red, Green, Yellow)
-      const buoys = [
-        { x: 12.8, y: -1.8, col: 0xef4444 },
-        { x: 12.8, y: -0.9, col: 0x22c55e },
-        { x: 12.8, y: 0.0, col: 0xeab308 }
-      ];
-      buoys.forEach(b => {
+      // ── Pre-qualification vertical marker pole ─────────────────────────────
+      const qualPole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 4.0, 12), orangeMat);
+      qualPole.rotation.x = Math.PI / 2;
+      qualPole.position.set(13.5, 0.0, 2.0);
+      scene.add(qualPole);
+
+      // ── T3: Buoys (Red, Green, Yellow) ─────────────────────────────────────
+      [ { x:12.8, y:-1.8, col:0xef4444 },
+        { x:12.8, y:-0.9, col:0x22c55e },
+        { x:12.8, y: 0.0, col:0xeab308 }
+      ].forEach(b => {
         const bMat = new THREE.MeshStandardMaterial({ color: b.col, roughness: 0.2 });
         const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.20, 24, 24), bMat);
         sphere.position.set(b.x, b.y, 2.0);
         sphere.castShadow = true;
         scene.add(sphere);
-
-        // Tether cable
-        const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 2.0), blackMat);
+        const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 2.0, 8), blackMat);
+        cable.rotation.x = Math.PI / 2;
         cable.position.set(b.x, b.y, 1.0);
         scene.add(cable);
       });
 
-      // 4. Task 4: Recon Target Bins (X=14.0, Y=-2.0)
+      // ── T4: Recon Bins ──────────────────────────────────────────────────────
       const binBox = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.3), blackMat);
       binBox.position.set(14.0, -2.0, 0.15);
       scene.add(binBox);
@@ -650,57 +625,56 @@
       const bin1 = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6), redMat);
       bin1.position.set(13.7, -2.0, 0.31);
       scene.add(bin1);
-
-      const bin2 = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6), new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+      const bin2 = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6),
+        new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
       bin2.position.set(14.3, -2.0, 0.31);
       scene.add(bin2);
 
-      // 5. Task 5: Torpedo Board (X=14.2, Y=2.0)
-      const boardGeo = new THREE.BoxGeometry(0.05, 1.2, 1.0);
-      const boardMesh = new THREE.Mesh(boardGeo, pvcMat);
-      boardMesh.position.set(14.2, 2.0, 1.5);
-      boardMesh.castShadow = true;
-      scene.add(boardMesh);
+      // ── T5: Torpedo Board ──────────────────────────────────────────────────
+      const board = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 1.0), pvcMat);
+      board.position.set(14.2, 2.0, 1.5);
+      board.castShadow = true;
+      scene.add(board);
 
-      // Cutout indicator targets
       const t1 = new THREE.Mesh(new THREE.CircleGeometry(0.15, 24), redMat);
       t1.rotation.y = Math.PI / 2;
       t1.position.set(14.23, 1.7, 1.5);
       scene.add(t1);
-
-      const t2 = new THREE.Mesh(new THREE.CircleGeometry(0.09, 24), new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+      const t2 = new THREE.Mesh(new THREE.CircleGeometry(0.09, 24),
+        new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
       t2.rotation.y = Math.PI / 2;
       t2.position.set(14.23, 2.3, 1.5);
       scene.add(t2);
 
-      // 6. Task 6: 9ft Octagon Surfacing Zone (X=17.5, Y=0.0)
+      // ── T6: Octagon Surfacing Zone ─────────────────────────────────────────
       const octRad = 2.74 / 2;
       const octPts = [];
       for (let i = 0; i <= 8; i++) {
         const a = (i / 8) * Math.PI * 2;
         octPts.push(new THREE.Vector3(17.5 + octRad * Math.cos(a), octRad * Math.sin(a), 0.02));
       }
-      const octGeo = new THREE.BufferGeometry().setFromPoints(octPts);
-      const octLine = new THREE.Line(octGeo, new THREE.LineBasicMaterial({ color: 0xf97316, linewidth: 3 }));
+      const octLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(octPts),
+        new THREE.LineBasicMaterial({ color: 0xf97316, linewidth: 3 })
+      );
       scene.add(octLine);
 
-      // Resupply Table
-      const table = new THREE.Mesh(new THREE.BoxGeometry(0.61, 0.61, 0.3), pvcMat);
+      // Resupply table
+      const table = new THREE.Mesh(new THREE.BoxGeometry(0.61, 0.61, 0.30), pvcMat);
       table.position.set(17.5, 0.0, 0.25);
       scene.add(table);
 
-      // Pinger
-      const pinger = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.12), blackMat);
+      // Acoustic pinger body
+      const pinger = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.12, 12), blackMat);
+      pinger.rotation.x = Math.PI / 2;
       pinger.position.set(17.5, 0.0, 0.46);
       scene.add(pinger);
 
-      // 7. Path Markers (Floor Guidance Strips)
-      const pathMarkers = [
-        { x: 4.8, y: 0.0, yaw: 0.0 },
-        { x: 12.2, y: -0.6, yaw: -0.45 },
-        { x: 15.8, y: 0.0, yaw: 0.35 }
-      ];
-      pathMarkers.forEach(pm => {
+      // ── Path Markers (orange floor strips) ─────────────────────────────────
+      [ { x: 4.8, y:  0.0, yaw: 0.0  },
+        { x:12.2, y: -0.6, yaw:-0.45 },
+        { x:15.8, y:  0.0, yaw: 0.35 }
+      ].forEach(pm => {
         const strip = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 0.15), orangeMat);
         strip.rotation.z = pm.yaw;
         strip.position.set(pm.x, pm.y, 0.015);
@@ -708,53 +682,58 @@
       });
     }
 
-    // Build Controllable AUV Mesh
+    // ── Animated pinger rings (pulsing circles at octagon floor level) ──────────
+    function buildPingerAnimation() {
+      for (let i = 0; i < 3; i++) {
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.05, 0.10, 32),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.0, side: THREE.DoubleSide })
+        );
+        ring.position.set(17.5, 0.0, 0.025);
+        ring.userData.phase = (i / 3) * Math.PI * 2;
+        scene.add(ring);
+        pingerRings.push(ring);
+      }
+    }
+
+    // ─── AUV Mesh ───────────────────────────────────────────────────────────────
     function buildAUVMesh() {
       const auvGroup = new THREE.Group();
 
-      // Streamlined Yellow Body Hull (0.8m x 0.4m x 0.28m)
-      const bodyMat = new THREE.MeshStandardMaterial({
-        color: 0xfacc15, // High-visibility yellow
-        roughness: 0.3,
-        metalness: 0.2
-      });
-      const hull = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, 0.28), bodyMat);
+      const hull = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.4, 0.28),
+        new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3, metalness: 0.2 })
+      );
       hull.castShadow = true;
       auvGroup.add(hull);
 
-      // Bow Optical Sensor Dome (Front Camera)
-      const domeMat = new THREE.MeshPhysicalMaterial({
-        color: 0x0f172a,
-        roughness: 0.1,
-        transmission: 0.8,
-        transparent: true,
-        opacity: 0.85
-      });
-      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 24), domeMat);
+      // Bow dome
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 24, 24),
+        new THREE.MeshPhysicalMaterial({ color: 0x0f172a, roughness: 0.1, transmission: 0.8, transparent: true, opacity: 0.85 })
+      );
       dome.position.set(0.4, 0, 0);
       auvGroup.add(dome);
 
-      // Forward Direction Red Arrow on Top Deck
-      const arrowMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
-      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 3), arrowMat);
+      // Forward arrow on top deck
+      const arrow = new THREE.Mesh(
+        new THREE.ConeGeometry(0.06, 0.2, 3),
+        new THREE.MeshBasicMaterial({ color: 0xdc2626 })
+      );
       arrow.rotation.z = -Math.PI / 2;
       arrow.position.set(0.2, 0, 0.15);
       auvGroup.add(arrow);
 
-      // Thruster Duct Cowlings (4 Horizontal + 2 Vertical)
+      // Thruster ducts
       const ductMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
-      // Port & Starboard horizontal thrusters
-      const ductL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.18, 16), ductMat);
-      ductL.rotation.z = Math.PI / 2;
-      ductL.position.set(0, -0.25, 0);
-      auvGroup.add(ductL);
+      [-0.25, 0.25].forEach(yo => {
+        const d = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.18, 16), ductMat);
+        d.rotation.z = Math.PI / 2;
+        d.position.set(0, yo, 0);
+        auvGroup.add(d);
+      });
 
-      const ductR = ductL.clone();
-      ductR.position.set(0, 0.25, 0);
-      auvGroup.add(ductR);
-
-      // Downward Camera Well
-      const downCam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.06), ductMat);
+      const downCam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.06, 12), ductMat);
       downCam.position.set(0, 0, -0.16);
       auvGroup.add(downCam);
 
@@ -762,198 +741,223 @@
       scene.add(auvMesh);
     }
 
-    // Camera Switcher
+    // ─── Camera ─────────────────────────────────────────────────────────────────
     function setCameraMode(mode) {
       cameraMode = mode;
       document.querySelectorAll('.header-controls button').forEach(b => {
         if (b.id && b.id.startsWith('cam-')) b.classList.remove('active');
       });
-      const btn = document.getElementById(`cam-${mode}`);
+      const btn = document.getElementById('cam-' + mode);
       if (btn) btn.classList.add('active');
-
-      if (mode === 'orbit') {
-        orbitControls.enabled = true;
-        orbitControls.target.copy(auvMesh.position);
-      } else {
-        orbitControls.enabled = false;
-      }
+      orbitControls.enabled = (mode === 'orbit');
+      if (mode === 'orbit') orbitControls.target.copy(auvMesh.position);
     }
 
     function toggleAutopilot() {
       autopilot = !autopilot;
       const btn = document.getElementById('btn-autopilot');
-      if (autopilot) {
-        btn.classList.add('active');
-        btn.innerText = "Autopilot: ON";
-      } else {
-        btn.classList.remove('active');
-        btn.innerText = "Autopilot: OFF";
-      }
+      btn.classList.toggle('active', autopilot);
+      btn.innerText = autopilot ? 'Autopilot: ON' : 'Autopilot: OFF';
     }
 
-    // Reset AUV
     function resetAUV() {
       auvBody.position.set(1.0, 0.0, 2.5);
       auvBody.velocity.set(0, 0, 0);
       auvBody.angularVelocity.set(0, 0, 0);
-      auvBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), 0);
-      currentStationIdx = 0;
+      auvBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), 0);
+      currentWpIdx = 0;
     }
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    // Main Physics & Animation Frame Loop
+    // ─── Main Loop ───────────────────────────────────────────────────────────────
     const fixedTimeStep = 1.0 / 60.0;
     let lastTime = performance.now();
 
     function animate() {
       requestAnimationFrame(animate);
-
       const time = performance.now();
-      const dt = (time - lastTime) / 1000;
-      lastTime = time;
+      const dt   = Math.min((time - lastTime) / 1000, 0.05); // clamp to 50ms
+      lastTime   = time;
 
-      // 1. Hydrodynamic Forces & Thruster Inputs
       applyHydrodynamicsAndControls(dt);
+      world.step(fixedTimeStep, dt, 3);
 
-      // 2. Step Physics Simulation
-      world.step(fixedTimeStep);
-
-      // 3. Sync Three.js Visual Mesh with Cannon.js Physics Body
       auvMesh.position.copy(auvBody.position);
       auvMesh.quaternion.copy(auvBody.quaternion);
 
-      // 4. Update Cameras based on active camera mode
       updateCamera();
-
-      // 5. Update Telemetry HUD
       updateTelemetry();
+      updatePingerRings(time / 1000);
 
-      // 6. Render 3D Scene
       renderer.render(scene, camera);
     }
 
-    // Hydrodynamics & Controls Handler
+    // ─── Hydrodynamics + Thruster Control ───────────────────────────────────────
     function applyHydrodynamicsAndControls(dt) {
       const z = auvBody.position.z;
 
-      // 1. Buoyancy (Archimedes Force)
-      // Waterline is at z = 4.0m
       if (z < 4.0) {
-        // Displaced volume = 0.0255 m^3 for neutral buoyancy (density 1000 kg/m^3 -> 25.5kg displacement vs 25kg mass)
-        const displacedVol = 0.0255;
-        const buoyantForce = 1000.0 * displacedVol * 9.81; // ~250.15 N upwards
-        auvBody.applyForce(new CANNON.Vec3(0, 0, buoyantForce), auvBody.position);
+        // Archimedes buoyancy (slight positive for neutrally-buoyant AUV)
+        const buoyF = 1000.0 * 0.0255 * 9.81; // ~250 N
+        auvBody.applyForce(new CANNON.Vec3(0, 0, buoyF), auvBody.position);
 
-        // Metacentric restoring moment: Center of Buoyancy is slightly above Center of Mass (+0.05m along local Z)
-        // This gives natural underwater leveling stability
+        // Metacentric restoring moment
         const localUp = auvBody.quaternion.vmult(new CANNON.Vec3(0, 0, 1));
-        const rightingTorque = localUp.cross(new CANNON.Vec3(0, 0, 1)).scale(40.0);
-        auvBody.torque.vadd(rightingTorque, auvBody.torque);
+        const restoring = localUp.cross(new CANNON.Vec3(0, 0, 1)).scale(40.0);
+        auvBody.torque.vadd(restoring, auvBody.torque);
 
-        // Hydrodynamic Water Drag (opposes velocity)
+        // Quadratic hydrodynamic drag
         const v = auvBody.velocity;
-        const dragCoeff = 25.0; // Linear/quadratic drag constant
-        const dragForce = new CANNON.Vec3(
-          -dragCoeff * v.x * Math.abs(v.x),
-          -dragCoeff * v.y * Math.abs(v.y),
-          -dragCoeff * v.z * Math.abs(v.z)
-        );
-        auvBody.applyForce(dragForce, auvBody.position);
-      } else {
-        // Above waterline: gravity takes over, downward air resistance
+        const drag = 25.0;
+        auvBody.applyForce(new CANNON.Vec3(
+          -drag * v.x * Math.abs(v.x),
+          -drag * v.y * Math.abs(v.y),
+          -drag * v.z * Math.abs(v.z)
+        ), auvBody.position);
       }
 
-      // 2. Autopilot Mode or User Keyboard Thruster Input
-      if (autopilot) {
-        runAutopilotLogic();
-      } else {
-        runUserThrusterInput();
-      }
+      if (autopilot) runAutopilotLogic();
+      else           runUserThrusterInput();
     }
 
-    // User Pilot Thrusters
+    // ─── User Thruster Input ─────────────────────────────────────────────────────
     function runUserThrusterInput() {
-      // Local Forward Vector
-      const forward = auvBody.quaternion.vmult(new CANNON.Vec3(1, 0, 0));
-      // Local Lateral (Starboard) Vector
+      const fwd   = auvBody.quaternion.vmult(new CANNON.Vec3(1, 0, 0));
       const right = auvBody.quaternion.vmult(new CANNON.Vec3(0, 1, 0));
-      // Local Upward Vector
-      const up = auvBody.quaternion.vmult(new CANNON.Vec3(0, 0, 1));
+      const T = 70.0, Tr = 15.0;
 
-      const thrustPower = 70.0; // Newtons
-      const turnTorque = 15.0;  // N*m
-
-      // Surge Forward (W) / Reverse (S)
-      if (keys['KeyW']) auvBody.applyForce(forward.scale(thrustPower), auvBody.position);
-      if (keys['KeyS']) auvBody.applyForce(forward.scale(-thrustPower * 0.7), auvBody.position);
-
-      // Sway Port (Q) / Starboard (E)
-      if (keys['KeyQ']) auvBody.applyForce(right.scale(-thrustPower * 0.6), auvBody.position);
-      if (keys['KeyE']) auvBody.applyForce(right.scale(thrustPower * 0.6), auvBody.position);
-
-      // Heave Surface (Shift) / Dive (Space)
-      if (keys['ShiftLeft'] || keys['ShiftRight']) auvBody.applyForce(new CANNON.Vec3(0, 0, thrustPower * 0.8), auvBody.position);
-      if (keys['Space']) auvBody.applyForce(new CANNON.Vec3(0, 0, -thrustPower * 0.8), auvBody.position);
-
-      // Yaw Turn Left (A) / Right (D)
-      if (keys['KeyA']) auvBody.torque.vadd(new CANNON.Vec3(0, 0, turnTorque), auvBody.torque);
-      if (keys['KeyD']) auvBody.torque.vadd(new CANNON.Vec3(0, 0, -turnTorque), auvBody.torque);
+      if (keys['KeyW']) auvBody.applyForce(fwd.scale( T),       auvBody.position);
+      if (keys['KeyS']) auvBody.applyForce(fwd.scale(-T * 0.7), auvBody.position);
+      if (keys['KeyQ']) auvBody.applyForce(right.scale(-T*0.6), auvBody.position);
+      if (keys['KeyE']) auvBody.applyForce(right.scale( T*0.6), auvBody.position);
+      if (keys['ShiftLeft'] || keys['ShiftRight'])
+        auvBody.applyForce(new CANNON.Vec3(0, 0,  T*0.8), auvBody.position);
+      if (keys['Space'])
+        auvBody.applyForce(new CANNON.Vec3(0, 0, -T*0.8), auvBody.position);
+      if (keys['KeyA']) auvBody.torque.vadd(new CANNON.Vec3(0, 0,  Tr), auvBody.torque);
+      if (keys['KeyD']) auvBody.torque.vadd(new CANNON.Vec3(0, 0, -Tr), auvBody.torque);
     }
 
-    // Autopilot Guidance Loop
-    function runAutopilotLogic() {
-      const tgt = stations[currentStationIdx];
-      const pos = auvBody.position;
-      const dx = tgt.x - pos.x;
-      const dy = tgt.y - pos.y;
-      const dz = tgt.z - pos.z;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+    // ─── Autopilot PD Controller ─────────────────────────────────────────────────
+    // Uses a PD yaw controller + speed limiter. Applies surge only when aligned.
+    // Navigates through corridor waypoints (not obstacle positions).
+    let prevYawErr = 0;
 
-      if (dist < 1.0 && Math.abs(dz) < 0.6) {
-        currentStationIdx = (currentStationIdx + 1) % stations.length;
+    function runAutopilotLogic() {
+      if (currentWpIdx >= waypoints.length) return; // course complete
+
+      const wp  = waypoints[currentWpIdx];
+      const pos = auvBody.position;
+      const dx  = wp.x - pos.x;
+      const dy  = wp.y - pos.y;
+      const dz  = wp.z - pos.z;
+      const dist3d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+      // ── Waypoint arrival check
+      if (dist3d < wp.radius) {
+        markTaskComplete(wp.task);
+        currentWpIdx++;
+        prevYawErr = 0;
+        return;
       }
 
+      // ── Yaw PD controller
       const targetYaw = Math.atan2(dy, dx);
-      // Extract current yaw from quaternion
-      const euler = new THREE.Euler().setFromQuaternion(auvMesh.quaternion, 'ZYX');
-      let yawDiff = targetYaw - euler.z;
-      while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
-      while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+      // Extract yaw from physics quaternion (Cannon quaternion → yaw angle)
+      const q  = auvBody.quaternion;
+      const sinY = 2.0 * (q.w * q.z + q.x * q.y);
+      const cosY = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
+      const curYaw = Math.atan2(sinY, cosY);
 
-      // Apply steering torque
-      auvBody.torque.vadd(new CANNON.Vec3(0, 0, yawDiff * 18.0), auvBody.torque);
+      let yawErr = targetYaw - curYaw;
+      while (yawErr >  Math.PI) yawErr -= Math.PI * 2;
+      while (yawErr < -Math.PI) yawErr += Math.PI * 2;
 
-      // Apply forward surge thrust
-      const forward = auvBody.quaternion.vmult(new CANNON.Vec3(1, 0, 0));
-      auvBody.applyForce(forward.scale(55.0), auvBody.position);
+      const kP = 22.0, kD = 9.0;
+      const yawRate = auvBody.angularVelocity.z;
+      const yawTorque = kP * yawErr - kD * yawRate;
+      auvBody.torque.vadd(new CANNON.Vec3(0, 0, yawTorque), auvBody.torque);
+      prevYawErr = yawErr;
 
-      // Depth control (PD)
-      const depthError = tgt.z - pos.z;
-      auvBody.applyForce(new CANNON.Vec3(0, 0, depthError * 45.0), auvBody.position);
+      // ── Surge thrust (only when roughly aligned, capped at max speed)
+      const v     = auvBody.velocity;
+      const speed = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+      const maxSpd = 1.8; // m/s cap
+      const aligned = Math.abs(yawErr) < 0.45;
+      if (aligned) {
+        // Reduce thrust as speed approaches cap
+        const thrustScale = Math.max(0.0, 1.0 - speed / maxSpd);
+        const fwd = auvBody.quaternion.vmult(new CANNON.Vec3(1, 0, 0));
+        auvBody.applyForce(fwd.scale(60.0 * thrustScale), auvBody.position);
+      }
+
+      // ── Depth PD controller
+      const depthErr  = dz;
+      const depthRate = auvBody.velocity.z;
+      auvBody.applyForce(new CANNON.Vec3(0, 0, depthErr * 45.0 - depthRate * 12.0), auvBody.position);
     }
 
-    // Camera Updater
+    // ─── Mission Task Completion ─────────────────────────────────────────────────
+    const taskNames = ['T1 Starting Gate','T2 Slalom Avoid','T3 Buoy Recon',
+                       'T4 Recon Bins','T5 Torpedo Board','T6 Octagon Surface'];
+    const taskIds   = ['t1','t2','t3','t4','t5','t6'];
+
+    function markTaskComplete(taskIdx) {
+      if (taskIdx >= taskDone.length || taskDone[taskIdx]) return;
+      taskDone[taskIdx] = true;
+      missionScore++;
+
+      // Update mission HUD
+      const label  = document.getElementById(taskIds[taskIdx] + '-label');
+      const status = document.getElementById(taskIds[taskIdx] + '-status');
+      if (label)  { label.className  = 'task-done'; }
+      if (status) { status.innerText = '✓'; }
+      document.getElementById('mission-score').innerText = missionScore + '/6';
+
+      // Show center banner
+      const banner = document.getElementById('task-complete-banner');
+      banner.innerHTML = '✅ ' + taskNames[taskIdx] + '<br><span style="font-size:13px;font-weight:400;">Task Complete!</span>';
+      banner.style.display = 'block';
+      setTimeout(() => { banner.style.display = 'none'; }, 2200);
+
+      // Highlight active task in mission HUD
+      updateMissionHudActive();
+    }
+
+    function updateMissionHudActive() {
+      taskIds.forEach((id, i) => {
+        const label = document.getElementById(id + '-label');
+        if (!label) return;
+        if (taskDone[i])      label.className = 'task-done';
+        else if (currentWpIdx < waypoints.length && waypoints[currentWpIdx].task === i)
+                              label.className = 'task-active';
+        else                  label.className = 'task-pending';
+      });
+    }
+
+    // ─── Pinger Animation ────────────────────────────────────────────────────────
+    function updatePingerRings(t) {
+      pingerRings.forEach(ring => {
+        const phase  = (t * 0.8 + ring.userData.phase) % (Math.PI * 2);
+        const frac   = (Math.sin(phase) * 0.5 + 0.5);
+        const scale  = 0.5 + frac * 5.0;
+        ring.scale.set(scale, scale, 1);
+        ring.material.opacity = (1.0 - frac) * 0.6;
+      });
+    }
+
+    // ─── Camera Update ───────────────────────────────────────────────────────────
     function updateCamera() {
-      const pos = auvMesh.position;
+      const pos  = auvMesh.position;
       const quat = auvMesh.quaternion;
 
       if (cameraMode === 'follow') {
-        // Position behind and slightly above AUV
-        const offset = new THREE.Vector3(-2.8, 0, 1.2).applyQuaternion(quat);
-        const camTargetPos = pos.clone().add(offset);
-        camera.position.lerp(camTargetPos, 0.1);
+        const offset   = new THREE.Vector3(-2.8, 0, 1.2).applyQuaternion(quat);
+        camera.position.lerp(pos.clone().add(offset), 0.1);
         camera.lookAt(pos.x + 2.0, pos.y, pos.z);
       } else if (cameraMode === 'cockpit') {
-        // Inside front optical dome looking forward
         const bowPos = pos.clone().add(new THREE.Vector3(0.42, 0, 0.05).applyQuaternion(quat));
         camera.position.copy(bowPos);
-        const lookTgt = pos.clone().add(new THREE.Vector3(5.0, 0, 0.05).applyQuaternion(quat));
-        camera.lookAt(lookTgt);
+        camera.lookAt(pos.clone().add(new THREE.Vector3(5.0, 0, 0.05).applyQuaternion(quat)));
       } else if (cameraMode === 'overhead') {
         camera.position.set(10.0, 0.0, 18.0);
         camera.lookAt(10.0, 0.0, 0.0);
@@ -962,32 +966,44 @@
       }
     }
 
-    // Telemetry Display Updates
+    // ─── Telemetry HUD ───────────────────────────────────────────────────────────
     function updateTelemetry() {
       const p = auvBody.position;
       const v = auvBody.velocity;
-      const speed = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      const euler = new THREE.Euler().setFromQuaternion(auvMesh.quaternion, 'ZYX');
-      const yawDeg = ((euler.z * 180 / Math.PI) + 360) % 360;
+      const speed = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 
-      document.getElementById('val-x').innerText = p.x.toFixed(2) + ' m';
-      document.getElementById('val-y').innerText = p.y.toFixed(2) + ' m';
-      document.getElementById('val-z').innerText = p.z.toFixed(2) + ' m';
+      // Yaw from quaternion directly
+      const q = auvBody.quaternion;
+      const sinY = 2.0*(q.w*q.z + q.x*q.y);
+      const cosY = 1.0 - 2.0*(q.y*q.y + q.z*q.z);
+      const yawDeg = ((Math.atan2(sinY, cosY) * 180 / Math.PI) + 360) % 360;
+
+      document.getElementById('val-x').innerText     = p.x.toFixed(2) + ' m';
+      document.getElementById('val-y').innerText     = p.y.toFixed(2) + ' m';
+      document.getElementById('val-z').innerText     = p.z.toFixed(2) + ' m';
       document.getElementById('val-speed').innerText = speed.toFixed(2) + ' m/s';
-      document.getElementById('val-yaw').innerText = yawDeg.toFixed(1) + '°';
+      document.getElementById('val-yaw').innerText   = yawDeg.toFixed(1) + '°';
+      document.getElementById('val-buoyancy').innerText = p.z < 4.0 ? 'Neutral (1.00g)' : 'Surface';
 
-      const tgt = stations[currentStationIdx];
-      const dist = Math.hypot(tgt.x - p.x, tgt.y - p.y, tgt.z - p.z);
-      document.getElementById('val-zone').innerText = tgt.name;
-      document.getElementById('val-next').innerText = tgt.desc;
-      document.getElementById('val-dist').innerText = dist.toFixed(2) + ' m';
+      if (currentWpIdx < waypoints.length) {
+        const wp   = waypoints[currentWpIdx];
+        const dist = Math.hypot(wp.x - p.x, wp.y - p.y, wp.z - p.z);
+        document.getElementById('val-zone').innerText = wp.name;
+        document.getElementById('val-next').innerText = 'WP ' + (currentWpIdx+1) + '/' + waypoints.length;
+        document.getElementById('val-dist').innerText = dist.toFixed(2) + ' m';
+      } else {
+        document.getElementById('val-zone').innerText = '🏆 COURSE COMPLETE';
+        document.getElementById('val-next').innerText = 'All tasks done!';
+        document.getElementById('val-dist').innerText = '0.00 m';
+      }
+
+      updateMissionHudActive();
     }
 
-    // Start Everything
+    // ─── Boot ────────────────────────────────────────────────────────────────────
     initPhysics();
     initGraphics();
     animate();
   </script>
 </body>
 </html>
-
