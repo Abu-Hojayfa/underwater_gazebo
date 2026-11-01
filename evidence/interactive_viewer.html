@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RoboSub Underwater Gazebo Real-Time Course Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #061118;
+      color: #e0f0ff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: rgba(10, 25, 38, 0.95);
+      border-bottom: 1px solid #1a3f5a;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11px;
+      background: #0284c7;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+    .controls-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      background: #0f2c42;
+      border: 1px solid #1e496a;
+      color: #bae6fd;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+    button.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    #viewport-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(8, 20, 30, 0.85);
+      border: 1px solid #1a3d56;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      line-height: 1.6;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    .hud .title {
+      font-weight: 600;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    .hud-stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .hud-label { color: #7dd3fc; }
+    .hud-val { font-family: monospace; font-weight: bold; color: #f0f9ff; }
+    .instructions {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(8, 20, 30, 0.8);
+      border: 1px solid #143247;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .telemetry {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(8, 20, 30, 0.85);
+      border: 1px solid #1a3d56;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      min-width: 200px;
+    }
+    .telemetry .title {
+      font-weight: 600;
+      color: #fb923c;
+      margin-bottom: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      <span>🌊 RoboSub Gazebo Real-Time Course Visualizer</span>
+      <span class="badge">SDF 1.9 Engine</span>
+    </h1>
+    <div class="controls-bar">
+      <button id="btn-orbit" class="active" onclick="setPreset('overview')">Course Overview</button>
+      <button id="btn-gate" onclick="setPreset('gate')">Gate Approach</button>
+      <button id="btn-slalom" onclick="setPreset('slalom')">Slalom Track</button>
+      <button id="btn-targets" onclick="setPreset('targets')">Bins & Torpedo</button>
+      <button id="btn-octagon" onclick="setPreset('octagon')">Octagon Zone</button>
+      <button id="btn-play" onclick="toggleSim()">▶ Play AUV Mission</button>
+      <button onclick="resetView()">Reset Cam</button>
+    </div>
+  </header>
+
+  <div id="viewport-container">
+    <canvas id="viewCanvas"></canvas>
+
+    <div class="hud">
+      <div class="title">Simulation Status</div>
+      <div class="hud-stat"><span class="hud-label">Environment:</span><span class="hud-val">RoboSub Pool (20x10x4m)</span></div>
+      <div class="hud-stat"><span class="hud-label">Water Depth:</span><span class="hud-val">4.00 m</span></div>
+      <div class="hud-stat"><span class="hud-label">Active Preset:</span><span class="hud-val" id="disp-preset">Course Overview</span></div>
+      <div class="hud-stat"><span class="hud-label">Fluid Density:</span><span class="hud-val">1000 kg/m³</span></div>
+    </div>
+
+    <div class="telemetry">
+      <div class="title">AUV Telemetry (Placeholder)</div>
+      <div class="hud-stat"><span class="hud-label">Position X:</span><span class="hud-val" id="tel-x">1.00 m</span></div>
+      <div class="hud-stat"><span class="hud-label">Position Y:</span><span class="hud-val" id="tel-y">0.00 m</span></div>
+      <div class="hud-stat"><span class="hud-label">Depth (Z):</span><span class="hud-val" id="tel-z">2.50 m</span></div>
+      <div class="hud-stat"><span class="hud-label">Speed:</span><span class="hud-val" id="tel-spd">0.00 m/s</span></div>
+      <div class="hud-stat"><span class="hud-label">Target:</span><span class="hud-val" id="tel-tgt">Gate Ingress</span></div>
+    </div>
+
+    <div class="instructions">
+      🖱️ <b>Left Mouse Drag:</b> Orbit Camera | <b>Right Mouse Drag:</b> Pan | <b>Scroll Wheel:</b> Zoom In/Out
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('viewCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Camera Orbit State
+    let camera = {
+      yaw: -0.85,
+      pitch: 0.42,
+      dist: 26,
+      target: [10, 0, 1.8]
+    };
+
+    let isDragging = false;
+    let isPanning = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    // Simulation / AUV Navigation Path Animation
+    let simRunning = false;
+    let simT = 0.0;
+    const waypoints = [
+      { x: 1.0, y: 0.0, z: 2.5, speed: 0.6, task: 'Starting Box' },
+      { x: 3.5, y: -0.7, z: 2.5, speed: 0.8, task: 'Passing Gate (Port Corridor)' },
+      { x: 5.5, y: -0.7, z: 2.0, speed: 0.8, task: 'Path Marker 1' },
+      { x: 7.0, y: -0.5, z: 1.8, speed: 0.7, task: 'Slalom Pole 1 Avoidance' },
+      { x: 8.0, y: 0.5, z: 1.8, speed: 0.7, task: 'Slalom Pole 2 Navigation' },
+      { x: 9.0, y: -0.5, z: 1.8, speed: 0.7, task: 'Slalom Pole 3 Avoidance' },
+      { x: 10.0, y: 0.5, z: 1.8, speed: 0.7, task: 'Slalom Pole 4 Navigation' },
+      { x: 11.5, y: -0.2, z: 1.8, speed: 0.8, task: 'Slalom Course Cleared' },
+      { x: 13.5, y: -1.6, z: 1.2, speed: 0.5, task: 'Recon Bins Alignment & Marker Drop' },
+      { x: 15.0, y: 0.0, z: 1.5, speed: 0.6, task: 'Path Marker 3 Heading' },
+      { x: 17.5, y: 0.0, z: 1.0, speed: 0.4, task: 'Entering 9ft Octagon Zone' },
+      { x: 17.5, y: 0.0, z: 3.8, speed: 0.3, task: 'Surfacing Completed (Mission Finished)' }
+    ];
+
+    let currentAuvPos = [1.0, 0.0, 2.5];
+
+    function resize() {
+      canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+      canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse Controls
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 0) isDragging = true;
+      else if (e.button === 2) isPanning = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      isPanning = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+
+      if (isDragging) {
+        camera.yaw += dx * 0.008;
+        camera.pitch += dy * 0.008;
+        camera.pitch = Math.max(0.05, Math.min(Math.PI / 2 - 0.05, camera.pitch));
+      } else if (isPanning) {
+        const panSpeed = camera.dist * 0.001;
+        const forwardX = -Math.sin(camera.yaw);
+        const forwardY = Math.cos(camera.yaw);
+        const rightX = Math.cos(camera.yaw);
+        const rightY = Math.sin(camera.yaw);
+
+        camera.target[0] -= (rightX * dx - forwardX * dy) * panSpeed;
+        camera.target[1] -= (rightY * dx - forwardY * dy) * panSpeed;
+      }
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      camera.dist += e.deltaY * 0.02;
+      camera.dist = Math.max(3, Math.min(60, camera.dist));
+    });
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // 3D Math & Projection
+    function project(x, y, z) {
+      const cosP = Math.cos(camera.pitch);
+      const sinP = Math.sin(camera.pitch);
+      const cosY = Math.cos(camera.yaw);
+      const sinY = Math.sin(camera.yaw);
+
+      const eyeX = camera.target[0] + camera.dist * cosP * cosY;
+      const eyeY = camera.target[1] + camera.dist * cosP * sinY;
+      const eyeZ = camera.target[2] + camera.dist * sinP;
+
+      const dx = x - eyeX;
+      const dy = y - eyeY;
+      const dz = z - eyeZ;
+
+      // Transform into camera space
+      const cx = -sinY * dx + cosY * dy;
+      const cy = -sinP * cosY * dx - sinP * sinY * dy + cosP * dz;
+      const cz = -cosP * cosY * dx - cosP * sinY * dy - sinP * dz;
+
+      if (cz <= 0.2) return null; // Behind camera
+
+      const fov = 750;
+      const aspect = canvas.width / canvas.height;
+      const px = (cx / cz) * fov + canvas.width / 2;
+      const py = (-cy / cz) * fov + canvas.height / 2;
+
+      return { x: px, y: py, depth: cz };
+    }
+
+    // Drawing Primitives
+    function drawLine3D(x1, y1, z1, x2, y2, z2, color, width = 1) {
+      const p1 = project(x1, y1, z1);
+      const p2 = project(x2, y2, z2);
+      if (!p1 || !p2) return;
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    function drawBox3D(cx, cy, cz, sx, sy, sz, color, edgeColor = null, alpha = 0.8) {
+      const hx = sx / 2, hy = sy / 2, hz = sz / 2;
+      const corners = [
+        [cx - hx, cy - hy, cz - hz],
+        [cx + hx, cy - hy, cz - hz],
+        [cx + hx, cy + hy, cz - hz],
+        [cx - hx, cy + hy, cz - hz],
+        [cx - hx, cy - hy, cz + hz],
+        [cx + hx, cy - hy, cz + hz],
+        [cx + hx, cy + hy, cz + hz],
+        [cx - hx, cy + hy, cz + hz]
+      ];
+
+      const faces = [
+        [0, 1, 2, 3], // bottom
+        [4, 5, 6, 7], // top
+        [0, 1, 5, 4], // front
+        [2, 3, 7, 6], // back
+        [1, 2, 6, 5], // right
+        [0, 3, 7, 4]  // left
+      ];
+
+      faces.forEach(f => {
+        const pts = f.map(i => project(corners[i][0], corners[i][1], corners[i][2]));
+        if (pts.some(p => p === null)) return;
+
+        ctx.fillStyle = color;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.closePath();
+        ctx.fill();
+
+        if (edgeColor) {
+          ctx.strokeStyle = edgeColor;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 1.0;
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1.0;
+    }
+
+    function drawCylinder3D(cx, cy, cz, radius, height, color) {
+      const segs = 12;
+      const topPts = [];
+      const botPts = [];
+      for (let i = 0; i < segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        topPts.push(project(cx + radius * Math.cos(a), cy + radius * Math.sin(a), cz + height / 2));
+        botPts.push(project(cx + radius * Math.cos(a), cy + radius * Math.sin(a), cz - height / 2));
+      }
+      if (topPts.some(p => !p) || botPts.some(p => !p)) return;
+
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < segs; i++) {
+        const next = (i + 1) % segs;
+        ctx.beginPath();
+        ctx.moveTo(botPts[i].x, botPts[i].y);
+        ctx.lineTo(topPts[i].x, topPts[i].y);
+        ctx.lineTo(topPts[next].x, topPts[next].y);
+        ctx.lineTo(botPts[next].x, botPts[next].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    function drawSphere3D(cx, cy, cz, radius, color) {
+      const p = project(cx, cy, cz);
+      if (!p) return;
+      const fov = 750;
+      const screenR = Math.max(3, (radius / p.depth) * fov);
+
+      const grad = ctx.createRadialGradient(p.x - screenR*0.3, p.y - screenR*0.3, screenR*0.1, p.x, p.y, screenR);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.4, color);
+      grad.addColorStop(1, '#051015');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, screenR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Render Scene Frame
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Deep aquatic background gradient
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGrad.addColorStop(0, '#0c2738');
+      bgGrad.addColorStop(0.6, '#061622');
+      bgGrad.addColorStop(1, '#020b12');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 1. Pool Floor Grid & Slab (20m x 10m)
+      drawBox3D(10, 0, -0.15, 20, 10, 0.3, '#143647', '#1b4d66', 0.9);
+
+      // Floor Grid Lines
+      for (let x = 0; x <= 20; x += 2) {
+        drawLine3D(x, -5, 0.002, x, 5, 0.002, '#1b4d66', 1);
+      }
+      for (let y = -5; y <= 5; y += 2) {
+        drawLine3D(0, y, 0.002, 20, y, 0.002, '#1b4d66', 1);
+      }
+      // Nav Centerline
+      drawLine3D(0, 0, 0.004, 20, 0, 0.004, '#38bdf8', 2);
+
+      // 2. Pool Walls (Transparent Blue boundaries)
+      drawBox3D(-0.15, 0, 2.25, 0.3, 10.6, 4.5, '#0e3a50', '#0284c7', 0.2);
+      drawBox3D(20.15, 0, 2.25, 0.3, 10.6, 4.5, '#0e3a50', '#0284c7', 0.2);
+      drawBox3D(10, -5.15, 2.25, 20, 0.3, 4.5, '#0e3a50', '#0284c7', 0.2);
+      drawBox3D(10, 5.15, 2.25, 20, 0.3, 4.5, '#0e3a50', '#0284c7', 0.15);
+
+      // Waterline surface plane
+      drawBox3D(10, 0, 4.0, 20, 10, 0.01, '#38bdf8', '#7dd3fc', 0.12);
+
+      // 3. Starting Gate (X=3.5, width=3.05m, height=1.52m, z=2.5m)
+      const gw = 3.05, gh = 1.52;
+      drawBox3D(3.5, 0, 2.5 + gh / 2, 0.08, gw, 0.08, '#f1f5f9', '#94a3b8'); // top bar
+      drawBox3D(3.5, 0, 2.5 - gh / 2, 0.08, gw, 0.08, '#f1f5f9', '#94a3b8'); // bot bar
+      drawBox3D(3.5, -gw / 2, 2.5, 0.08, 0.08, gh, '#f1f5f9');
+      drawBox3D(3.5, gw / 2, 2.5, 0.08, 0.08, gh, '#f1f5f9');
+      drawBox3D(3.5, 0, 2.5, 0.08, 0.08, gh, '#ef4444'); // center red divider
+
+      // Gate Indicator panels
+      // Port upright (-Y): Top Black, Bottom Red
+      drawBox3D(3.5, -gw / 2, 2.5 + gh / 4, 0.14, 0.14, gh / 2, '#111827');
+      drawBox3D(3.5, -gw / 2, 2.5 - gh / 4, 0.14, 0.14, gh / 2, '#ef4444');
+      // Starboard upright (+Y): Top Red, Bottom Black ("Red, Right, Above")
+      drawBox3D(3.5, gw / 2, 2.5 + gh / 4, 0.14, 0.14, gh / 2, '#ef4444');
+      drawBox3D(3.5, gw / 2, 2.5 - gh / 4, 0.14, 0.14, gh / 2, '#111827');
+      // Mooring cables
+      drawLine3D(3.5, -gw / 2, 2.5 - gh / 2, 3.5, -gw / 2, 0, '#64748b', 2);
+      drawLine3D(3.5, gw / 2, 2.5 - gh / 2, 3.5, gw / 2, 0, '#64748b', 2);
+
+      // 4. Slalom Poles (X=6.5 to 11.5)
+      const poles = [
+        { x: 6.5, y: -1.0, col: '#ffffff' },
+        { x: 7.5, y: 0.0, col: '#ef4444' },
+        { x: 8.5, y: 1.0, col: '#ffffff' },
+        { x: 9.5, y: -1.0, col: '#ffffff' },
+        { x: 10.5, y: 0.0, col: '#ef4444' },
+        { x: 11.5, y: 1.0, col: '#ffffff' },
+      ];
+      poles.forEach(p => {
+        drawBox3D(p.x, p.y, 0.05, 0.4, 0.4, 0.1, '#334155'); // base
+        drawCylinder3D(p.x, p.y, 1.1, 0.04, 2.2, p.col);
+        drawSphere3D(p.x, p.y, 2.25, 0.08, '#ef4444'); // cap
+      });
+
+      // 5. Buoy Target Array (X=12.8)
+      const buoys = [
+        { x: 12.8, y: -1.8, col: '#ef4444' },
+        { x: 12.8, y: -0.9, col: '#22c55e' },
+        { x: 12.8, y: 0.0, col: '#eab308' },
+      ];
+      buoys.forEach(b => {
+        drawLine3D(b.x, b.y, 0, b.x, b.y, 2.0, '#64748b', 1.5);
+        drawSphere3D(b.x, b.y, 2.0, 0.22, b.col);
+      });
+
+      // 6. Recon Bins (X=14.0, Y=-2.0)
+      drawBox3D(14.0, -2.0, 0.15, 1.2, 0.8, 0.3, '#1e293b', '#f8fafc');
+      drawBox3D(13.7, -2.0, 0.16, 0.4, 0.5, 0.02, '#ef4444'); // Red compartment
+      drawBox3D(14.3, -2.0, 0.16, 0.4, 0.5, 0.02, '#3b82f6'); // Blue compartment
+
+      // 7. Torpedo Target Board (X=14.2, Y=2.0)
+      drawBox3D(14.2, 2.0, 0.05, 0.5, 1.3, 0.1, '#334155'); // stand
+      drawLine3D(14.2, 1.4, 0.1, 14.2, 1.4, 1.5, '#94a3b8', 3);
+      drawLine3D(14.2, 2.6, 0.1, 14.2, 2.6, 1.5, '#94a3b8', 3);
+      drawBox3D(14.2, 2.0, 1.5, 0.05, 1.2, 1.0, '#f8fafc', '#38bdf8');
+      drawSphere3D(14.2, 1.7, 1.5, 0.15, '#ef4444'); // Large target cutout
+      drawSphere3D(14.2, 2.3, 1.5, 0.09, '#3b82f6'); // Small target cutout
+
+      // 8. 9ft Octagon Zone (X=17.5, Y=0.0, diam=2.74m)
+      const r = 2.74 / 2;
+      for (let i = 0; i < 8; i++) {
+        const a1 = (i / 8) * Math.PI * 2;
+        const a2 = ((i + 1) / 8) * Math.PI * 2;
+        drawLine3D(17.5 + r * Math.cos(a1), r * Math.sin(a1), 0.02,
+                   17.5 + r * Math.cos(a2), r * Math.sin(a2), 0.02, '#f97316', 4);
+      }
+      // Central Resupply Table
+      drawBox3D(17.5, 0.0, 0.25, 0.61, 0.61, 0.3, '#ffffff', '#f97316');
+      drawCylinder3D(17.5, 0.0, 0.42, 0.06, 0.08, '#1e293b'); // pinger housing
+      drawSphere3D(17.5, 0.0, 0.48, 0.04, '#fbbf24'); // transducer
+
+      // 9. Path Navigation Markers (Orange floor strips)
+      const pathMarkers = [
+        { x: 4.8, y: 0.0, yaw: 0.0 },
+        { x: 12.2, y: -0.6, yaw: -0.45 },
+        { x: 15.8, y: 0.0, yaw: 0.35 }
+      ];
+      pathMarkers.forEach(pm => {
+        const cosY = Math.cos(pm.yaw), sinY = Math.sin(pm.yaw);
+        drawLine3D(pm.x - 0.6*cosY, pm.y - 0.6*sinY, 0.015,
+                   pm.x + 0.6*cosY, pm.y + 0.6*sinY, 0.015, '#f97316', 5);
+      });
+
+      // 10. Generic AUV Model
+      drawBox3D(currentAuvPos[0], currentAuvPos[1], currentAuvPos[2], 0.8, 0.4, 0.28, '#eab308', '#ca8a04', 1.0);
+      drawSphere3D(currentAuvPos[0] + 0.4, currentAuvPos[1], currentAuvPos[2], 0.12, '#0f172a'); // Bow dome
+      // Thrusters
+      drawBox3D(currentAuvPos[0], currentAuvPos[1] - 0.24, currentAuvPos[2], 0.2, 0.08, 0.08, '#1e293b');
+      drawBox3D(currentAuvPos[0], currentAuvPos[1] + 0.24, currentAuvPos[2], 0.2, 0.08, 0.08, '#1e293b');
+
+      // Update simulation position if running
+      if (simRunning) {
+        simT += 0.008;
+        if (simT >= waypoints.length - 1) {
+          simT = waypoints.length - 1;
+          simRunning = false;
+          document.getElementById('btn-play').innerText = '▶ Replay AUV Mission';
+        }
+        const idx = Math.floor(simT);
+        const frac = simT - idx;
+        const nextIdx = Math.min(idx + 1, waypoints.length - 1);
+        const w1 = waypoints[idx];
+        const w2 = waypoints[nextIdx];
+
+        currentAuvPos[0] = w1.x + (w2.x - w1.x) * frac;
+        currentAuvPos[1] = w1.y + (w2.y - w1.y) * frac;
+        currentAuvPos[2] = w1.z + (w2.z - w1.z) * frac;
+
+        document.getElementById('tel-x').innerText = currentAuvPos[0].toFixed(2) + ' m';
+        document.getElementById('tel-y').innerText = currentAuvPos[1].toFixed(2) + ' m';
+        document.getElementById('tel-z').innerText = currentAuvPos[2].toFixed(2) + ' m';
+        document.getElementById('tel-spd').innerText = (w1.speed).toFixed(2) + ' m/s';
+        document.getElementById('tel-tgt').innerText = w1.task;
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // View Presets
+    function setPreset(name) {
+      document.querySelectorAll('.controls-bar button').forEach(b => b.classList.remove('active'));
+      const activeBtn = event ? event.target : null;
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('disp-preset').innerText = name.toUpperCase();
+
+      if (name === 'overview') {
+        camera.yaw = -0.85; camera.pitch = 0.42; camera.dist = 26;
+        camera.target = [10, 0, 1.8];
+      } else if (name === 'gate') {
+        camera.yaw = -1.25; camera.pitch = 0.22; camera.dist = 7;
+        camera.target = [3.5, 0, 2.5];
+      } else if (name === 'slalom') {
+        camera.yaw = -1.1; camera.pitch = 0.28; camera.dist = 11;
+        camera.target = [9.0, 0, 1.2];
+      } else if (name === 'targets') {
+        camera.yaw = -0.7; camera.pitch = 0.35; camera.dist = 8;
+        camera.target = [14.0, 0, 1.5];
+      } else if (name === 'octagon') {
+        camera.yaw = -0.85; camera.pitch = 0.48; camera.dist = 7;
+        camera.target = [17.5, 0, 0.5];
+      }
+    }
+
+    function resetView() {
+      setPreset('overview');
+    }
+
+    function toggleSim() {
+      simRunning = !simRunning;
+      if (simRunning && simT >= waypoints.length - 1) {
+        simT = 0;
+      }
+      document.getElementById('btn-play').innerText = simRunning ? '⏸ Pause AUV Mission' : '▶ Play AUV Mission';
+    }
+
+    render();
+  </script>
+</body>
+</html>
