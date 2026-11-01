@@ -1,0 +1,230 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="gate">
+    <static>true</static>
+    <link name="gate_frame">
+      <!-- Top Crossbar -->
+      <visual name="crossbar_top_visual">
+        <pose>0 0 0.7600 1.570796 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>3.0500</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="crossbar_top_collision">
+        <pose>0 0 0.7600 1.570796 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>3.0500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Bottom Crossbar -->
+      <visual name="crossbar_bot_visual">
+        <pose>0 0 -0.7600 1.570796 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>3.0500</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="crossbar_bot_collision">
+        <pose>0 0 -0.7600 1.570796 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>3.0500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Port Upright (Left, -Y) -->
+      <visual name="post_left_visual">
+        <pose>0 -1.5250 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="post_left_collision">
+        <pose>0 -1.5250 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Starboard Upright (Right, +Y) -->
+      <visual name="post_right_visual">
+        <pose>0 1.5250 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1.0</ambient>
+          <diffuse>0.9 0.9 0.9 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="post_right_collision">
+        <pose>0 1.5250 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Center Divider -->
+      <visual name="center_divider_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.85 0.05 0.05 1.0</ambient>
+          <diffuse>0.85 0.05 0.05 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="center_divider_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0300</radius>
+            <length>1.5200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Port Indicator Panel Top (Black) -->
+      <visual name="port_panel_top">
+        <pose>0 -1.5250 0.3800 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.12 0.7600</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.0800 0.0800 0.0800 1.0000</ambient>
+          <diffuse>0.0800 0.0800 0.0800 1.0000</diffuse>
+        </material>
+      </visual>
+
+      <!-- Port Indicator Panel Bottom (Red) -->
+      <visual name="port_panel_bot">
+        <pose>0 -1.5250 -0.3800 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.12 0.7600</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.8500 0.0500 0.0500 1.0000</ambient>
+          <diffuse>0.8500 0.0500 0.0500 1.0000</diffuse>
+        </material>
+      </visual>
+
+      <!-- Starboard Indicator Panel Top (Red - "Red Right Above") -->
+      <visual name="stbd_panel_top">
+        <pose>0 1.5250 0.3800 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.12 0.7600</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.8500 0.0500 0.0500 1.0000</ambient>
+          <diffuse>0.8500 0.0500 0.0500 1.0000</diffuse>
+        </material>
+      </visual>
+
+      <!-- Starboard Indicator Panel Bottom (Black) -->
+      <visual name="stbd_panel_bot">
+        <pose>0 1.5250 -0.3800 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.12 0.7600</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.0800 0.0800 0.0800 1.0000</ambient>
+          <diffuse>0.0800 0.0800 0.0800 1.0000</diffuse>
+        </material>
+      </visual>
+
+      <!-- Mooring tether legs down to pool floor -->
+      <visual name="mooring_leg_left">
+        <pose>0 -1.5250 -1.6300 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>1.74</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.4 0.4 0.4 1.0</ambient>
+          <diffuse>0.4 0.4 0.4 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="mooring_leg_left_col">
+        <pose>0 -1.5250 -1.6300 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>1.74</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="mooring_leg_right">
+        <pose>0 1.5250 -1.6300 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>1.74</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.4 0.4 0.4 1.0</ambient>
+          <diffuse>0.4 0.4 0.4 1.0</diffuse>
+        </material>
+      </visual>
+      <collision name="mooring_leg_right_col">
+        <pose>0 1.5250 -1.6300 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>1.74</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

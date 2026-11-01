@@ -1,0 +1,147 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="pool">
+    <static>true</static>
+    <link name="pool_structure">
+      <!-- Floor slab -->
+      <visual name="floor_visual">
+        <pose>10.0000 0 -0.1500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 10.0000 0.3000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1500 0.3800 0.4500 1.0000</ambient>
+          <diffuse>0.1500 0.3800 0.4500 1.0000</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+      <collision name="floor_collision">
+        <pose>10.0000 0 -0.1500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 10.0000 0.3000</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- Centerline floor navigation tile -->
+      <visual name="floor_centerline">
+        <pose>10.0000 0 0.002 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 0.15 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.08 0.18 0.22 1.0</ambient>
+          <diffuse>0.08 0.18 0.22 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- West Wall (Start Wall, -X) -->
+      <visual name="wall_west_visual">
+        <pose>-0.1500 0 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3000 10.6000 4.5000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1800 0.4800 0.5500 1.0000</ambient>
+          <diffuse>0.1800 0.4800 0.5500 1.0000</diffuse>
+        </material>
+      </visual>
+      <collision name="wall_west_collision">
+        <pose>-0.1500 0 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3000 10.6000 4.5000</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- East Wall (End Wall, +X) -->
+      <visual name="wall_east_visual">
+        <pose>20.1500 0 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3000 10.6000 4.5000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1800 0.4800 0.5500 1.0000</ambient>
+          <diffuse>0.1800 0.4800 0.5500 1.0000</diffuse>
+        </material>
+      </visual>
+      <collision name="wall_east_collision">
+        <pose>20.1500 0 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3000 10.6000 4.5000</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- South Wall (Port Wall, -Y) -->
+      <visual name="wall_south_visual">
+        <pose>10.0000 -5.1500 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 0.3000 4.5000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1800 0.4800 0.5500 1.0000</ambient>
+          <diffuse>0.1800 0.4800 0.5500 1.0000</diffuse>
+        </material>
+      </visual>
+      <collision name="wall_south_collision">
+        <pose>10.0000 -5.1500 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 0.3000 4.5000</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- North Wall (Starboard Wall, +Y) -->
+      <visual name="wall_north_visual">
+        <pose>10.0000 5.1500 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 0.3000 4.5000</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1800 0.4800 0.5500 1.0000</ambient>
+          <diffuse>0.1800 0.4800 0.5500 1.0000</diffuse>
+        </material>
+      </visual>
+      <collision name="wall_north_collision">
+        <pose>10.0000 5.1500 2.2500 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 0.3000 4.5000</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- Water Surface plane marker -->
+      <visual name="water_surface_visual">
+        <pose>10.0000 0 4.0000 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>20.0000 10.0000 0.01</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.45 0.55 0.4</ambient>
+          <diffuse>0.15 0.55 0.65 0.4</diffuse>
+          <specular>0.6 0.8 0.9 0.6</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

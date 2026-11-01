@@ -1,0 +1,174 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="octagon_zone">
+    <static>true</static>
+    <link name="octagon_link">
+      
+      <!-- Octagon perimeter segment 1 -->
+      <visual name="oct_seg_1">
+        <pose>1.2657 0.0000 0.005 0 0 1.5708</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 2 -->
+      <visual name="oct_seg_2">
+        <pose>0.8950 0.8950 0.005 0 0 2.3562</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 3 -->
+      <visual name="oct_seg_3">
+        <pose>0.0000 1.2657 0.005 0 0 3.1416</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 4 -->
+      <visual name="oct_seg_4">
+        <pose>-0.8950 0.8950 0.005 0 0 3.9270</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 5 -->
+      <visual name="oct_seg_5">
+        <pose>-1.2657 0.0000 0.005 0 0 4.7124</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 6 -->
+      <visual name="oct_seg_6">
+        <pose>-0.8950 -0.8950 0.005 0 0 5.4978</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 7 -->
+      <visual name="oct_seg_7">
+        <pose>-0.0000 -1.2657 0.005 0 0 6.2832</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+      <!-- Octagon perimeter segment 8 -->
+      <visual name="oct_seg_8">
+        <pose>0.8950 -0.8950 0.005 0 0 7.0686</pose>
+        <geometry>
+          <box>
+            <size>1.0486 0.0800 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0000 0.4500 0.0000 1.0000</ambient>
+          <diffuse>1.0000 0.4500 0.0000 1.0000</diffuse>
+        </material>
+      </visual>
+
+      <!-- Center Floor Crosshair -->
+      <visual name="crosshair_x">
+        <pose>0 0 0.006 0 0 0</pose>
+        <geometry><box><size>0.80 0.04 0.004</size></box></geometry>
+        <material><ambient>1.0 1.0 1.0 1.0</ambient><diffuse>1.0 1.0 1.0 1.0</diffuse></material>
+      </visual>
+      <visual name="crosshair_y">
+        <pose>0 0 0.006 0 0 1.570796</pose>
+        <geometry><box><size>0.80 0.04 0.004</size></box></geometry>
+        <material><ambient>1.0 1.0 1.0 1.0</ambient><diffuse>1.0 1.0 1.0 1.0</diffuse></material>
+      </visual>
+
+      <!-- Central Resupply Table (2ft x 2ft) -->
+      <visual name="resupply_table_top">
+        <pose>0 0 0.30 0 0 0</pose>
+        <geometry><box><size>0.61 0.61 0.04</size></box></geometry>
+        <material><ambient>0.85 0.85 0.85 1.0</ambient><diffuse>0.85 0.85 0.85 1.0</diffuse></material>
+      </visual>
+      <collision name="resupply_table_top_col">
+        <pose>0 0 0.30 0 0 0</pose>
+        <geometry><box><size>0.61 0.61 0.04</size></box></geometry>
+      </collision>
+
+      <!-- Table Legs -->
+      <visual name="table_leg_1">
+        <pose>-0.25 -0.25 0.15 0 0 0</pose>
+        <geometry><cylinder><radius>0.02</radius><length>0.30</length></cylinder></geometry>
+        <material><ambient>0.3 0.3 0.3 1.0</ambient><diffuse>0.3 0.3 0.3 1.0</diffuse></material>
+      </visual>
+      <visual name="table_leg_2">
+        <pose>0.25 -0.25 0.15 0 0 0</pose>
+        <geometry><cylinder><radius>0.02</radius><length>0.30</length></cylinder></geometry>
+        <material><ambient>0.3 0.3 0.3 1.0</ambient><diffuse>0.3 0.3 0.3 1.0</diffuse></material>
+      </visual>
+      <visual name="table_leg_3">
+        <pose>-0.25 0.25 0.15 0 0 0</pose>
+        <geometry><cylinder><radius>0.02</radius><length>0.30</length></cylinder></geometry>
+        <material><ambient>0.3 0.3 0.3 1.0</ambient><diffuse>0.3 0.3 0.3 1.0</diffuse></material>
+      </visual>
+      <visual name="table_leg_4">
+        <pose>0.25 0.25 0.15 0 0 0</pose>
+        <geometry><cylinder><radius>0.02</radius><length>0.30</length></cylinder></geometry>
+        <material><ambient>0.3 0.3 0.3 1.0</ambient><diffuse>0.3 0.3 0.3 1.0</diffuse></material>
+      </visual>
+
+      <!-- Acoustic Pinger Transducer Placeholder -->
+      <visual name="pinger_housing">
+        <pose>0 0 0.34 0 0 0</pose>
+        <geometry><cylinder><radius>0.05</radius><length>0.08</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1.0</ambient><diffuse>0.1 0.1 0.1 1.0</diffuse></material>
+      </visual>
+      <visual name="pinger_emitter_cap">
+        <pose>0 0 0.39 0 0 0</pose>
+        <geometry><sphere><radius>0.04</radius></sphere></geometry>
+        <material><ambient>0.95 0.85 0.05 1.0</ambient><diffuse>0.95 0.85 0.05 1.0</diffuse></material>
+      </visual>
+      <collision name="pinger_col">
+        <pose>0 0 0.35 0 0 0</pose>
+        <geometry><cylinder><radius>0.05</radius><length>0.10</length></cylinder></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
