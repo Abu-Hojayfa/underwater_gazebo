@@ -153,6 +153,32 @@ export SDF_PATH="$(pwd)/models:${SDF_PATH}"
 gz sim -r worlds/robosub_pool.sdf
 ```
 
+### Option C: Real-Time Web Simulator (Zero Installation / Windows / Browser)
+
+For environments without Linux or Gazebo installed, a real-time 3D simulation with rigid-body physics, hydrodynamics, thruster controls, and autonomous navigation is available directly in the web browser:
+
+**One-Click Launch (Windows):**
+```powershell
+# In PowerShell:
+.\scripts\launch_web_sim.ps1
+
+# Or double-click:
+scripts\launch_web_sim.bat
+```
+
+**Manual Launch:**
+```bash
+python -m http.server 8080
+# Open in Chrome / Edge: http://localhost:8080/web_simulator.html
+```
+
+**Web Simulator Capabilities:**
+- **Physics Engine:** Cannon.js rigid-body dynamics with Archimedes buoyancy and hydrodynamic drag.
+- **AUV Thruster Controls:** Manual keyboard piloting (<kbd>W</kbd>/<kbd>S</kbd> surge, <kbd>A</kbd>/<kbd>D</kbd> yaw, <kbd>Q</kbd>/<kbd>E</kbd> sway, <kbd>Shift</kbd>/<kbd>Space</kbd> heave).
+- **Autonomous Navigation:** Real-time PD heading & depth controller guiding the AUV sequentially through all 6 competition stations.
+- **Multi-Camera Views:** Follow Camera [1], Free Orbit [2], AUV Bow Optical Dome [3], Tactical Map [4].
+- **Live Telemetry & Task HUD:** Live coordinates, velocity, heading, buoyancy status, and real-time task progression.
+
 ---
 
 ## 7. Environment Configuration and Customization

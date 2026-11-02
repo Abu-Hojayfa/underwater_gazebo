@@ -44,11 +44,13 @@ if ($GzBinary) {
     $LaunchCmd = "ign"
     $SubCmd = "gazebo"
 } else {
-    Write-Host "[-] Error: Neither 'gz' nor 'ign' binary was found in PATH." -ForegroundColor Red
-    Write-Host "    Modern Gazebo Sim is typically executed within WSL2 (Ubuntu 24.04/22.04) or native Windows builds." -ForegroundColor Yellow
+    Write-Host "[-] Note: Neither 'gz' nor 'ign' binary was found in PATH." -ForegroundColor Yellow
+    Write-Host "    Modern Gazebo Sim is typically executed within WSL2 (Ubuntu 24.04/22.04) or native Linux." -ForegroundColor Yellow
     Write-Host "    If running in WSL2, execute: ./scripts/launch_world.sh" -ForegroundColor Yellow
-    Write-Host "    Refer to docs/TROUBLESHOOTING.md for environment setup instructions." -ForegroundColor Yellow
-    exit 2
+    Write-Host "----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "[+] Fallback: Starting Real-Time 3D Web Simulator (Three.js + Cannon.js)..." -ForegroundColor Green
+    & "$ScriptDir\launch_web_sim.ps1"
+    exit 0
 }
 
 # 3. Configure Resource Paths
